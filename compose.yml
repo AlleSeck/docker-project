@@ -4,7 +4,7 @@ services:
   app:
     build:
       args:
-        user: ali
+        user: root
         uid: 1000
       context: ./php1
       dockerfile: Dockerfile  
@@ -37,6 +37,7 @@ services:
       context: ./php1
     volumes:
       - ./php1:/var/www/html
+      - ./resources/views:/var/www/html/resources/views
     depends_on:
       - db
 
@@ -56,7 +57,6 @@ services:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:

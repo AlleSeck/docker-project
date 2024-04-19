@@ -4,6 +4,12 @@ FROM php:7.4-fpm
 ARG user
 ARG uid
 
+RUN docker-php-ext-install mysqli pdo pdo_mysql
+RUN docker-php-ext-enable mysqli pdo pdo_mysql
+
+###il me faut un script pour demarrer le conteneur
+#CMD php artisan migrate:fresh —seed
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y 
 
