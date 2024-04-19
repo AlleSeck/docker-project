@@ -1,0 +1,63 @@
+version: '3.7'
+
+services:
+  app:
+    build:
+      args:
+        user: ali
+        uid: 1000
+      context: ./php1
+      dockerfile: Dockerfile  
+
+  nginx1:
+    image: nginx:1.17-alpine
+    container_name: test1-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx1:/etc/nginx1/conf.d
+    depends_on:
+      - php1
+      - db
+
+  nginx2:
+    image: nginx
+    ports:
+      - "8001:80"
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx2:/etc/nginx2/conf.d
+    depends_on:
+      - php2
+      - db
+
+  php1:
+    build:
+      context: ./php1
+    volumes:
+      - ./php1:/var/www/html
+    depends_on:
+      - db
+
+  php2:
+    build:
+      context: ./php2
+    volumes:
+      - ./php2:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    container_name: test-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
