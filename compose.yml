@@ -1,65 +1,63 @@
-version: '3.7'
+# Version de la syntaxe Docker Compose
+version: '3.8'
 
 services:
-  app:
-    build:
-      args:
-        user: ali
-        uid: 1000
-      context: ./php1
-      dockerfile: Dockerfile  
-
+  # Service Nginx 1
   nginx1:
-    image: nginx:1.17-alpine
-    container_name: test1-nginx
+    image: nginx:alpine  # Utilise l'image légère Alpine de Nginx
+    container_name: nginx1
     ports:
-      - "8000:80"
+      - "8081:80"  # Mappe le port 80 du conteneur au port 8081 de l'hôte
     volumes:
-      - ./:/var/www
-      - ./docker-compose/nginx1:/etc/nginx1/conf.d
+      - ./nginx1/default.conf:/etc/nginx/conf.d/default.conf  # Montage du fichier de configuration Nginx
+      - ./site:/var/www  # Montage du code source de Laravel
     depends_on:
-      - php1
-      - db
+      - php1  # Dépendance vis-à-vis du service PHP1
 
+  # Service Nginx 2
   nginx2:
-    image: nginx
+    image: nginx:alpine
+    container_name: nginx2
     ports:
-      - "8001:80"
+      - "8082:80"
     volumes:
-      - ./:/var/www
-      - ./docker-compose/nginx2:/etc/nginx2/conf.d
+      - ./nginx2/default.conf:/etc/nginx/conf.d/default.conf
+      - ./site:/var/www
     depends_on:
       - php2
-      - db
 
+  # Service PHP 1
   php1:
     build:
-      context: ./php1
+      context: ./php1  # Contexte de construction Docker, utilisant le Dockerfile dans ./php
+    container_name: php1
     volumes:
-      - ./php1:/var/www/html
+      - ./site:/var/www  # Montage du code source de Laravel
     depends_on:
-      - db
+      - mysql  # Dépendance de MySQL
 
+  # Service PHP 2
   php2:
     build:
       context: ./php2
+    container_name: php2
     volumes:
-      - ./php2:/var/www/html
+      - ./site:/var/www
     depends_on:
-      - db
+      - mysql
 
-  db:
+  # Service MySQL
+  mysql:
     image: mysql:5.7
-    container_name: test-db
-    restart: unless-stopped
+    container_name: mysql
+    restart: always
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
+      MYSQL_DATABASE: laravel  # Nom de la base de données
+      MYSQL_USER: root  # Utilisateur de la base de données
+      MYSQL_PASSWORD:   # Mot de passe de l'utilisateur
+      MYSQL_ROOT_PASSWORD:   # Mot de passe root de MySQL
     volumes:
-      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql  # Volume pour la persistance des données MySQL
 
-
+volumes:
+  db_data:  # Déclaration du volume pour la base de données
