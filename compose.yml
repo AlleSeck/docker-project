@@ -1,63 +1,86 @@
 version: '3.7'
 
 services:
-  app:
-    build:
-      args:
-        user: ali
-        uid: 1000
-      context: ./php1
-      dockerfile: Dockerfile  
 
   nginx1:
-    image: nginx:1.17-alpine
-    container_name: test1-nginx
+    build:
+      context: .
+      target: nginx1
     ports:
       - "8000:80"
-    volumes:
-      - ./:/var/www
-      - ./docker-compose/nginx1:/etc/nginx1/conf.d
     depends_on:
       - php1
-      - db
-
-  nginx2:
-    image: nginx
-    ports:
-      - "8001:80"
-    volumes:
-      - ./:/var/www
-      - ./docker-compose/nginx2:/etc/nginx2/conf.d
-    depends_on:
-      - php2
-      - db
 
   php1:
     build:
-      context: ./php1
-    volumes:
-      - ./php1:/var/www/html
+      context: .
+      target: php1
     depends_on:
       - db
+      - minio
+
+  nginx2:
+    build:
+      context: .
+      target: nginx2
+    ports:
+      - "8001:80"
+    depends_on:
+      - php2
 
   php2:
     build:
-      context: ./php2
-    volumes:
-      - ./php2:/var/www/html
+      context: .
+      target: php2
     depends_on:
       - db
+      - minio
 
   db:
     image: mysql:5.7
-    container_name: test-db
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    volumes:
-      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+#    volumes:
+#     - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+    depends_on:
+      - db
+
+  migrate:
+    build:
+      context: .
+      target: php_base
+    depends_on:
+      - db
+    command: php artisan migrate:fresh --seed
+
+  minio:
+    image: quay.io/minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: ROOTNAME
+      MINIO_ROOT_PASSWORD: PASSWORD123
+    command: server /data --console-address ":9001"
+
+  maildev:
+    image: maildev/maildev
+    restart: always
+    ports:
+      - 8081:1080
+    environment:
+      - TZ=Asia/Shanghai
+      - MAILDEV_WEB_PORT=1080
+      - MAILDEV_SMTP_PORT=1025
