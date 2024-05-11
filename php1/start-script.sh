@@ -5,5 +5,6 @@ composer install
 php artisan key:generate
 # Migration et seeding de la base de données
 php artisan migrate:fresh --seed
-
+# Démarrage du serveur PHP
+php-fpm
 
