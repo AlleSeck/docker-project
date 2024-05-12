@@ -1,26 +1,40 @@
-# Utilisation de l'image de base officielle PHP avec PHP 8.0 FPM
-FROM php:8.0-fpm
+# Choose a base image
+FROM php:8.1-fpm
 
-# Installation de Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Installation des dépendances nécessaires pour les extensions PHP courantes
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    git \
+    curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    nodejs \
+    npm
 
-# Installation des extensions PHP
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Copie du script d'initialisation
-COPY start-script.sh /usr/local/bin/start-script
-RUN chmod +x /usr/local/bin/start-script
+# Get Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Définition du répertoire de travail
+# Set working directory
 WORKDIR /var/www
 
-# Commande à exécuter au démarrage du conteneur
-CMD ["sh", "/usr/local/bin/start-script"]
+# Add user for Laravel application
+RUN groupadd -g 1000 www
+RUN useradd -u 1000 -ms /bin/bash -g www www
+
+# Copy existing application directory permissions
+COPY --chown=www:www . /var/www
+
+# Change current user to www
+USER www
+
+# Expose port 9000 and start php-fpm server
+EXPOSE 9000
+CMD ["php-fpm"]
