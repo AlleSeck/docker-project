@@ -1,3 +1,5 @@
+# plusieurs FROM dans 1 même dockerfile = multiStage
+
 FROM php:8.1-fpm as php_base
 
 # Set working directory

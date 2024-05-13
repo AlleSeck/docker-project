@@ -57,6 +57,7 @@ services:
     depends_on:
       - db
 
+  # Laravel framework php
   migrate:
     build:
       context: .
