@@ -7,7 +7,7 @@ services:
       context: .
       target: nginx1
     ports:
-      - "8000:80"
+      - 8000:80
     depends_on:
       - php1
 
@@ -24,7 +24,7 @@ services:
       context: .
       target: nginx2
     ports:
-      - "8001:80"
+      - 8001:80
     depends_on:
       - php2
 
@@ -47,11 +47,12 @@ services:
 #    volumes:
 #     - ./docker-compose/mysql:/docker-entrypoint-initdb.d
 
+# Contact DB
   phpmyadmin:
     image: phpmyadmin
     restart: always
     ports:
-      - 8080:80
+      - 8082:80
     environment:
       - PMA_ARBITRARY=1
     depends_on:
@@ -66,6 +67,7 @@ services:
       - db
     command: php artisan migrate:fresh --seed
 
+ # Storage & versionning
   minio:
     image: quay.io/minio/minio
     ports:
@@ -76,6 +78,20 @@ services:
       MINIO_ROOT_PASSWORD: PASSWORD123
     command: server /data --console-address ":9001"
 
+  # Cache
+  redis:
+    image: redis
+
+  # Gere Redis
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - 8083:8081
+
+  # Gestion de mails
   maildev:
     image: maildev/maildev
     restart: always

@@ -28,7 +28,7 @@ RUN npm ci && npm run build
 # Donne les droits pour accéder au dossier storage
 RUN chmod 777 -R storage
 
-# Genere la clef artisan
+# Genere la clef artisan
 RUN php artisan key:generate
 
 # Autorise l'éxécution et lance le entrypoint.sh
