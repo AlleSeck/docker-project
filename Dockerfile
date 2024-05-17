@@ -23,6 +23,7 @@ COPY . .
 
 # Installs les dépendances PHP & Node
 RUN composer install
+# J'ai écouté discrètement et visiblement on fait jamais de composer update
 RUN npm ci && npm run build
 
 # Donne les droits pour accéder au dossier storage
@@ -31,11 +32,10 @@ RUN chmod 777 -R storage
 # Genere la clef artisan
 RUN php artisan key:generate
 
-# Autorise l'éxécution et lance le entrypoint.sh
-
-# RUN chmod +x entrypoint.sh
-# ENTRYPOINT ["./entrypoint.sh"]
-# CMD ["php-fpm"]
+# Autorise l'éxécution et lance le entrypoint.sh // outdated parce que conflits à la con
+#RUN chmod +x entrypoint.sh
+#ENTRYPOINT ["./entrypoint.sh"]
+#CMD ["php-fpm"]
 
 FROM php_base as php1
 

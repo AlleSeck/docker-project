@@ -44,10 +44,13 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
-#    volumes:
-#     - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
-# Contact DB
   phpmyadmin:
     image: phpmyadmin
     restart: always
@@ -56,15 +59,18 @@ services:
     environment:
       - PMA_ARBITRARY=1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
-  # Laravel framework php
   migrate:
     build:
       context: .
       target: php_base
+    volumes:
+      - .mysql:/var/lib/mysql
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: php artisan migrate:fresh --seed
 
  # Storage & versionning
